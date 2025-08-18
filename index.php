@@ -7,6 +7,10 @@ if (file_exists("contacts.json")) {
 }
 
 ?>
+
+<!--
+user base de dato: root, password = ''; 
+-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
