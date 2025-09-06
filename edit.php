@@ -1,9 +1,20 @@
-<pre>
 <?php
 
-require "database.php"; 
+require "database.php";
 
-  $error = null;
+$id = $_GET["id"];
+
+$statement = $conn->prepare("SELECT * FROM contacts WHERE id = :id LIMIT 1");
+$statement->execute([":id" => $id]);
+if ($statement->rowCount() == 0) {
+  http_response_code(404);
+  echo ("HTTP 404 NOT FOUND");
+  return;
+}
+
+$contact = $statement->fetch(PDO::FETCH_ASSOC);
+
+$error = null;
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
@@ -15,46 +26,51 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $name = $_POST["name"];
     $phoneNumber = $_POST["phone_number"];
   
-    $statement = $conn->prepare("INSERT INTO contacts (name, phone_number) VALUES (:name, :phone_number)");
-    $statement->bindParam(":name", $_POST["name"]); 
-    $statement->bindParam(":phone_number", $_POST["phone_number"]); 
-    $statement->execute();
+    $statement = $conn->prepare("UPDATE contacts SET name= :name, phone_number= :phone_number WHERE id= :id");
+
+    
+    $statement->execute([
+      ":id" => $id, 
+      ":name" => $_POST["name"], 
+      ":phone_number" => $_POST["phone_number"]
+
+    ]);
 
     header("Location: index.php");
   }
 }
-  
+
 
 ?>
-</pre>
 
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Bootstrap -->
-  <link rel="stylesheet" 
-  href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/5.3.6/darkly/bootstrap.min.css" 
-  integrity="sha512-l3MAiPjxdOqsqUlkb7nxqw1+yhICsHRAGN7WO6VfT+y+iTTDxAYayxiE6xAIRCZp6PjaBHTlSbxp+2Sa32Hjow==" 
-  crossorigin="anonymous" 
-  referrerpolicy="no-referrer" 
-  />
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/5.3.6/darkly/bootstrap.min.css"
+    integrity="sha512-l3MAiPjxdOqsqUlkb7nxqw1+yhICsHRAGN7WO6VfT+y+iTTDxAYayxiE6xAIRCZp6PjaBHTlSbxp+2Sa32Hjow=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer" />
 
-  <script 
-  defer
-  src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" 
-  integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" 
-  crossorigin="anonymous">
-</script>
+  <script
+    defer
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+    crossorigin="anonymous">
+  </script>
 
-<!-- Static Content -->
-<link rel="stylesheet" href="./static/css/index.css"/>
+  <!-- Static Content -->
+  <link rel="stylesheet" href="./static/css/index.css" />
 
   <title>Contacts App</title>
 </head>
+
 <body>
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
@@ -69,8 +85,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         data-bs-target="#navbarNav"
         aria-controls="navbarNav"
         aria-expanded="false"
-        aria-label="Toggle navigation"
-      >
+        aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
@@ -98,23 +113,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                   <?=$error ?>
                 </p>
                 <?php endif ?>
-              <form method="post" action="add.php">
+              <form method="post" action="edit.php?id=<?=$contact["id"] ?>">
                 <div class="mb-3 row">
                   <label for="name" class="col-md-4 col-form-label text-md-end">Name</label>
-    
+
                   <div class="col-md-6">
-                    <input id="name" type="text" class="form-control" name="name" required autocomplete="name" autofocus>
+                    <input value="<?=$contact["name"] ?>" id="name" type="text" class="form-control" name="name" required autocomplete="name" autofocus>
                   </div>
                 </div>
-    
+
                 <div class="mb-3 row">
                   <label for="phone_number" class="col-md-4 col-form-label text-md-end">Phone Number</label>
-    
+
                   <div class="col-md-6">
-                    <input id="phone_number" type="tel" class="form-control" name="phone_number" required autocomplete="phone_number" autofocus>
+                    <input value="<?=$contact["phone_number"] ?>" id="phone_number" type="tel" class="form-control" name="phone_number" required autocomplete="phone_number" autofocus>
                   </div>
                 </div>
-    
+
                 <div class="mb-3 row">
                   <div class="col-md-6 offset-md-4">
                     <button type="submit" class="btn btn-primary">Submit</button>
@@ -128,4 +143,5 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </div>
   </main>
 </body>
+
 </html>
